@@ -8,7 +8,7 @@ def parse():
 
     parser.add_argument('-g', '--gpu', type=int, default=0, help='gpu id')
     parser.add_argument('-s', '--seed', type=int, default=0, help='seed')
-    parser.add_argument('-m', '--model_name', type=str, default='CNN', choices=['RNN', 'LSTM', 'GRU', 'MLP', 'CNN'],
+    parser.add_argument('-m', '--model_name', type=str, default='RNN', choices=['RNN', 'LSTM', 'GRU', 'MLP', 'CNN'],
                         help='model name')
     parser.add_argument('--train_batch_size', type=int, default=64, help='train batch size')
     parser.add_argument('--test_batch_size', type=int, default=64, help='test batch size')

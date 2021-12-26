@@ -11,7 +11,7 @@ The repository contains the PyTorch implementation of image classification model
 | :---: | :---: | :---: | :---: |
 | RNN | 333.8 | 6.5 | 94.4 |
 | LSTM | 1345.2 | 24.1 | 98.5 |
-| RGU | 1012.8 | 18.3 | 98.9 |
+| GRU | 1012.8 | 18.3 | 98.9 |
 | MLP | 475.1 | 238.0 | 98.7 |
 | CNN | 577.1 | 43.8 | 99.3 |
 
