@@ -2,7 +2,7 @@
 ===
 
 # Introduction
-The repository contains five MNIST classification models implemented by PyTorch, which are based on MLP, CNN, RNN, LSTM, and GRU respectively.
+The repository contains the PyTorch implementation of image classification models for MNIST dataset, based on MLP, CNN, RNN, LSTM, and GRU.
 
 # Results
 
