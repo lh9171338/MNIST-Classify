@@ -1,11 +1,12 @@
 [<img height="23" src="https://github.com/lh9171338/Outline/blob/master/icon.jpg"/>](https://github.com/lh9171338/Outline) MNIST Classify
 ===
 
-# 1. Introduction
->>The repository contains five MNIST classification models implemented by PyTorch, which are based on MLP, CNN, RNN, LSTM, and GRU respectively.
+# Introduction
+The repository contains five MNIST classification models implemented by PyTorch, which are based on MLP, CNN, RNN, LSTM, and GRU respectively.
 
-# 2. Results
+# Results
 
+## Metrics
 | Model | #FLOPs (K) | #Params (K) | Acc (%) |
 | :---: | :---: | :---: | :---: |
 | RNN | 333.8 | 6.5 | 94.4 |
@@ -14,21 +15,23 @@
 | MLP | 475.1 | 238.0 | 98.7 |
 | CNN | 577.1 | 43.8 | 99.3 |
 
+
+## Loss & Accuracy Curves
+<center class="half">
+
 <p align="center">
-    <img width="50%" src="figure/loss.png"/>
-</p> 
-<p align="center">
-    <img width="50%" src="figure/accuracy.png"/>
+    <img width="49%" src="figure/loss.png"/>
+    <img width="49%" src="figure/accuracy.png"/>
 </p> 
 
-# 3. Requirements
+# Requirements
 
  - python3
  - pytorch==1.6.0
  - CUDA==10.1
  - argparse, yacs, tqdm, tensorboardX
 
-# 4. Training & Testing
+# Training & Testing
 
 ## Training
 ```shell
