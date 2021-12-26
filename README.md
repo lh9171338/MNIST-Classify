@@ -17,12 +17,11 @@ The repository contains five MNIST classification models implemented by PyTorch,
 
 
 ## Loss & Accuracy Curves
-<center class="half">
 
 <p align="center">
     <img width="49%" src="figure/loss.png"/>
     <img width="49%" src="figure/accuracy.png"/>
-</p> 
+</p>
 
 # Requirements
 
