@@ -8,7 +8,7 @@ The repository contains the PyTorch implementation of image classification model
 
 ## Metrics
 | Model | #FLOPs (M) | #Params (K) | Acc (%) |
-| :---: | :---: | :---: | :---: |
+| :--- | :---: | :---: | :---: |
 | RNN | 0.3 | 6.5 | 94.4 |
 | LSTM | 1.3 | 24.1 | 98.5 |
 | GRU | 1.0 | 18.3 | 98.9 |
@@ -26,8 +26,16 @@ The repository contains the PyTorch implementation of image classification model
 ## Loss & Accuracy Curves
 
 <p align="center">
-    <img width="49%" src="figure/loss.png"/>
-    <img width="49%" src="figure/accuracy.png"/>
+    <img width="100%" src="figure/loss-01.png"/>
+</p>
+<p align="center">
+    <img width="100%" src="figure/loss-02.png"/>
+</p>
+<p align="center">
+    <img width="100%" src="figure/accuracy-01.png"/>
+</p>
+<p align="center">
+    <img width="100%" src="figure/accuracy-02.png"/>
 </p>
 
 # Requirements
