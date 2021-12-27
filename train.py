@@ -2,19 +2,24 @@ import os
 import tqdm
 import random
 import copy
+import shutil
 import torch
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from tensorboardX import SummaryWriter
 from config.cfg import parse
-from network.build import build_model
+from network.build import build_model, build_optimizer, build_scheduler
 
 
 def train(model, loader, cfg, device):
     # Option
-    optimizer = torch.optim.Adam(model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay, amsgrad=True)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=cfg.step_size)
+    optimizer = build_optimizer(cfg, model)
+    scheduler = build_scheduler(cfg, optimizer)
     loss_func = torch.nn.CrossEntropyLoss()
+
+    # Log
+    if os.path.exists(cfg.log_path):
+        shutil.rmtree(cfg.log_path)
     writer = SummaryWriter(cfg.log_path)
 
     # Train
@@ -89,7 +94,7 @@ if __name__ == '__main__':
         torch.cuda.manual_seed_all(cfg.seed)
 
     # Load model
-    model = build_model(cfg.model_name).to(device)
+    model = build_model(cfg).to(device)
 
     # Load dataset
     train_dataset = datasets.MNIST(root=cfg.dataset_path, train=True, transform=transforms.ToTensor(), download=cfg.download)

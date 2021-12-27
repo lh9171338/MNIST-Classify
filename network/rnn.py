@@ -2,24 +2,23 @@ from torch import nn
 
 
 class RNN(nn.Module):
-    def __init__(self, model_name):
+    def __init__(self, arch, in_dim, num_classes, hidden_size=64, num_layers=1):
         super().__init__()
-
-        assert model_name in ['RNN', 'LSTM', 'GRU'], 'Unrecognized model name'
-        if model_name == 'RNN':
+        assert arch in ['RNN', 'LSTM', 'GRU'], 'Unrecognized model name'
+        if arch == 'RNN':
             net = nn.RNN
-        elif model_name == 'LSTM':
+        elif arch == 'LSTM':
             net = nn.LSTM
         else:
             net = nn.GRU
         self.rnn = net(
-            input_size=28,
-            hidden_size=64,
-            num_layers=1,
+            input_size=in_dim,
+            hidden_size=hidden_size,
+            num_layers=num_layers,
             batch_first=True,
         )
 
-        self.out = nn.Linear(64, 10)
+        self.out = nn.Linear(hidden_size, num_classes)
         self.softmax = nn.Softmax(dim=-1)
 
     def forward(self, x):

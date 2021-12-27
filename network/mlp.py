@@ -2,35 +2,28 @@ from torch import nn
 
 
 class MLP(nn.Module):
-    def __init__(self):
+    def __init__(self, in_dim, num_classes, hidden_dims):
         super().__init__()
+        assert len(hidden_dims) > 0, 'hidden_dims can not be empty'
 
-        self.fc1 = nn.Sequential(
-            nn.Linear(784, 256),
-            nn.BatchNorm1d(256),
-            nn.ReLU(inplace=True)
-        )
-        self.fc2 = nn.Sequential(
-            nn.Linear(256, 120),
-            nn.BatchNorm1d(120),
-            nn.ReLU(inplace=True)
-        )
-        self.fc3 = nn.Sequential(
-            nn.Linear(120, 84),
-            nn.BatchNorm1d(84),
-            nn.ReLU(inplace=True)
-        )
-        self.fc4 = nn.Sequential(
-            nn.Linear(84, 10)
-        )
+        fcs = []
+        for i in range(len(hidden_dims)):
+            in_dim = in_dim if i == 0 else hidden_dims[i - 1]
+            fcs.append(
+                nn.Sequential(
+                    nn.Linear(in_dim, hidden_dims[i]),
+                    nn.BatchNorm1d(hidden_dims[i]),
+                    nn.ReLU(inplace=True)
+                )
+            )
+        fcs.append(nn.Linear(hidden_dims[-1], num_classes))
+
+        self.fc = nn.Sequential(*fcs)
         self.softmax = nn.Softmax(dim=-1)
 
     def forward(self, x):
         x = x.view(x.shape[0], -1)
-        x = self.fc1(x)
-        x = self.fc2(x)
-        x = self.fc3(x)
-        x = self.fc4(x)
+        x = self.fc(x)
         x = self.softmax(x)
 
         return x

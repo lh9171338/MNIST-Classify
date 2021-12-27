@@ -33,7 +33,7 @@ if __name__ == '__main__':
     print('use_gpu: ', use_gpu)
 
     # Load model
-    model = build_model(cfg.model_name).to(device)
+    model = build_model(cfg).to(device)
     model_filename = os.path.join(cfg.model_path, cfg.model_name + '.pkl')
     state_dict = torch.load(model_filename, map_location=device)
     model.load_state_dict(state_dict)

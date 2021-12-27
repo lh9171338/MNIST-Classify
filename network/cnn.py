@@ -2,43 +2,42 @@ from torch import nn
 
 
 class CNN(nn.Module):
-    def __init__(self):
+    def __init__(self, num_classes, conv_dims, fc_dims):
         super().__init__()
+        assert len(conv_dims) > 0, 'conv_dims can not be empty'
+        assert len(fc_dims) > 0, 'fc_dims can not be empty'
 
-        self.conv1 = nn.Sequential(
-            nn.Conv2d(1, 6, 5),
-            nn.BatchNorm2d(6),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(2, stride=2)
-        )
-        self.conv2 = nn.Sequential(
-            nn.Conv2d(6, 16, 5),
-            nn.BatchNorm2d(16),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(2, stride=2)
-        )
-        self.fc1 = nn.Sequential(
-            nn.Linear(256, 120),
-            nn.BatchNorm1d(120),
-            nn.ReLU(inplace=True)
-        )
-        self.fc2 = nn.Sequential(
-            nn.Linear(120, 84),
-            nn.BatchNorm1d(84),
-            nn.ReLU(inplace=True)
-        )
-        self.fc3 = nn.Sequential(
-            nn.Linear(84, 10)
-        )
+        convs, fcs = [], []
+        for i in range(len(conv_dims)):
+            in_dims = 1 if i == 0 else conv_dims[i - 1]
+            convs.append(
+                nn.Sequential(
+                    nn.Conv2d(in_dims, conv_dims[i], 5),
+                    nn.BatchNorm2d(conv_dims[i]),
+                    nn.ReLU(inplace=True),
+                    nn.MaxPool2d(2, stride=2)
+                )
+            )
+
+        for i in range(len(fc_dims) - 1):
+            fcs.append(
+                nn.Sequential(
+                    nn.Linear(fc_dims[i], fc_dims[i + 1]),
+                    nn.BatchNorm1d(fc_dims[i + 1]),
+                    nn.ReLU(inplace=True)
+                )
+            )
+        fcs.append(nn.Linear(fc_dims[-1], num_classes))
+
+        self.conv = nn.Sequential(*convs)
+        self.fc = nn.Sequential(*fcs)
         self.softmax = nn.Softmax(dim=-1)
 
     def forward(self, x):
-        x = self.conv1(x)
-        x = self.conv2(x)
+        x = self.conv(x)
         x = x.view(x.shape[0], -1)
-        x = self.fc1(x)
-        x = self.fc2(x)
-        x = self.fc3(x)
+        x = self.fc(x)
         x = self.softmax(x)
 
         return x
+
