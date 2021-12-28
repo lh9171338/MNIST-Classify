@@ -42,7 +42,7 @@ class MHSA(nn.Module):
         return out
 
 
-class MHCABottleneck(nn.Module):
+class MHSABottleneck(nn.Module):
     def __init__(self, dim, num_heads, sr_ratio, qkv_bias, width, height, pos_encoding, dim_factor=2, scale_factor=1):
         super().__init__()
         hidden_dim = dim // dim_factor
@@ -79,7 +79,7 @@ class MHSANet(nn.Module):
         layers = []
         for i in range(depth):
             layers.append(
-                MHCABottleneck(
+                MHSABottleneck(
                     dim=embed_dim,
                     num_heads=num_heads,
                     sr_ratio=sr_ratio,

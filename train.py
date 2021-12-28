@@ -102,7 +102,7 @@ if __name__ == '__main__':
     train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=cfg.train_batch_size,
                                                num_workers=cfg.num_workers, shuffle=True)
     val_loader = torch.utils.data.DataLoader(dataset=val_dataset, batch_size=cfg.test_batch_size,
-                                               num_workers=cfg.num_workers, shuffle=True)
+                                               num_workers=cfg.num_workers, shuffle=False)
     loader = {'train': train_loader, 'val': val_loader}
 
     # Train network

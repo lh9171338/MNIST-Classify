@@ -19,7 +19,7 @@ The repository contains the PyTorch implementation of image classification model
 | MTL | 37.4 | 135.1 | 98.9 |
 | MTL-Li | 35.1 | 111.1 | 98.9 |
 | CMTL | 39.1 | 150.9 | 99.0 |
-| STL | 37.0 | 98.0 | 98.9 |
+| STL | 37.0 | 98.0 | 98.8 |
 | Transformer | 36.1 | 142.9 | 98.9 |
 | Transformer-PE | 36.1 | 142.9 | 99.2 |
 
