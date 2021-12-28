@@ -43,11 +43,13 @@ class MHSA(nn.Module):
 
 
 class MHSABottleneck(nn.Module):
-    def __init__(self, dim, num_heads, sr_ratio, qkv_bias, width, height, pos_encoding, dim_factor=2, scale_factor=1):
+    def __init__(self, dim, num_heads, sr_ratio, qkv_bias=False, width=None, height=None, pos_encoding=False, dim_factor=2, scale_factor=1):
         super().__init__()
         hidden_dim = dim // dim_factor
         self.scale_factor = scale_factor
         sr_ratio = sr_ratio // scale_factor
+        width = width // scale_factor
+        height = height // scale_factor
 
         self.bn1 = nn.BatchNorm2d(dim)
         self.conv1 = nn.Conv2d(dim, hidden_dim, 1)
@@ -73,7 +75,7 @@ class MHSABottleneck(nn.Module):
 
 
 class MHSANet(nn.Module):
-    def __init__(self, in_dim, num_classes, depth, embed_dim, num_heads, sr_ratio, qkv_bias, width, height, pos_encoding):
+    def __init__(self, in_dim, num_classes, depth, embed_dim, num_heads=8, sr_ratio=1, qkv_bias=False, width=None, height=None, pos_encoding=False):
         super().__init__()
 
         layers = []
