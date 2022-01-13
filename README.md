@@ -1,4 +1,4 @@
-[![](https://github.com/lh9171338/Outline/blob/master/icon.jpg)](https://github.com/lh9171338/Outline) MNIST Classify
+[<img height="23" src="https://github.com/lh9171338/Outline/blob/master/icon.jpg"/>](https://github.com/lh9171338/Outline) MNIST Classify
 ===
 
 # Introduction
@@ -18,10 +18,10 @@ The repository contains the PyTorch implementation of image classification model
 ## Loss & Accuracy Curves
 
 <p align="center">
-    <img width="100%" src="figure/loss.png"/>
+    <img width="80%" src="figure/loss.png"/>
 </p>
 <p align="center">
-    <img width="100%" src="figure/accuracy.png"/>
+    <img width="80%" src="figure/accuracy.png"/>
 </p>
 
 # Requirements
