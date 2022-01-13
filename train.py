@@ -79,6 +79,7 @@ def train(model, loader, cfg, device):
 if __name__ == '__main__':
     # Parameter
     cfg = parse()
+    print(cfg)
     os.makedirs(cfg.model_path, exist_ok=True)
 
     # Use GPU or CPU

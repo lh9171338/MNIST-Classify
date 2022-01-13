@@ -35,10 +35,9 @@ def parse():
     cfg.download = not os.path.exists(os.path.join(cfg.dataset_path, cfg.dataset_name))
     cfg.log_path = f'{cfg.log_path}/{cfg.model_name}'
     cfg.freeze()
-    cfg.is_frozen()
 
     # Print cfg
-    for k, v in cfg.items():
-        print(f'{k}: {v}')
+    # for k, v in cfg.items():
+    #     print(f'{k}: {v}')
 
     return cfg
