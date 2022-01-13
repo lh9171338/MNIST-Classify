@@ -12,7 +12,7 @@ The repository contains the PyTorch implementation of image classification model
 
 Training with all training dataset and the **depth** is set to 1.
 
-| Model | #Memory (M) | #Params (M) | #GLOPs (G) | Training time (min) | Acc (%) |
+| Model | #Memory (G) | #Params (M) | #GLOPs (G) | Training time (min) | Acc (%) |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | CNN | 0.6 | 25.3 | 9.4 | 5.1 | 76.2 |
 | MHSA | 1.4 | 84.3 | 3.6 | 13.3 | 98.5 |
@@ -86,10 +86,8 @@ All ablation experiments used only one tenth of the training dataset.
 ## Accuracy Curves
 
 <p align="center">
-    <img width="100%" src="figure/acc-time.png"/>
-</p>
-<p align="center">
-    <img width="100%" src="figure/acc-depth.png"/>
+    <img width="49%" src="figure/acc-time.png"/>
+    <img width="49%" src="figure/acc-depth.png"/>
 </p>
 
 # Requirements
@@ -103,10 +101,12 @@ All ablation experiments used only one tenth of the training dataset.
 
 ## Training
 ```shell
-python train.py -a <ARCH> -p [-d <DEPTH>] [-m <MODEL_NAME>] [-g <GPU_ID>]
+python train.py --arch <ARCH> --pos_encoding [--depth <DEPTH>] [--model_name <MODEL_NAME>] [--gpu <GPU_ID>]
+# or python train.py -a <ARCH> -p [-d <DEPTH>] [-m <MODEL_NAME>] [-g <GPU_ID>]
 ```
 
 ## Test
 ```shell
-python test.py -a <ARCH> -p [-d <DEPTH>] [-m <MODEL_NAME>] [-g <GPU_ID>]
+python test.py --arch <ARCH> --pos_encoding [--depth <DEPTH>] [--model_name <MODEL_NAME>] [--gpu <GPU_ID>]
+# or python test.py -a <ARCH> -p [-d <DEPTH>] [-m <MODEL_NAME>] [-g <GPU_ID>]
 ```
