@@ -10,7 +10,7 @@ if __name__ == "__main__":
     device = torch.device(f'cuda:{0}')
 
     # parameter
-    name_list = ['RNN', 'LSTM', 'GRU', 'MLP', 'CNN', 'MHSA', 'MHSA-PE', 'MTL', 'MTL-Li', 'CMTL', 'STL', 'Transformer', 'Transformer-PE']
+    name_list = ['CNN', 'MHSA', 'NTN', 'MTN', 'MTN-Li', 'CMTN', 'STN', 'ETN', 'ATN']
 
     # model
     memory_list, flops_list, params_list = [], [], []
@@ -19,29 +19,24 @@ if __name__ == "__main__":
         yaml_file = os.path.join('config', arch + '.yaml')
         cfg = CfgNode.load_cfg(open(yaml_file))
         cfg.arch = arch
-        if name == 'MHSA':
-            cfg.MHSA.pos_encoding = False
-        elif name == 'MHSA-PE':
-            cfg.MHSA.pos_encoding = True
-        elif name == 'Transformer':
-            cfg.Transformer.pos_encoding = False
-        elif name == 'Transformer-PE':
-            cfg.Transformer.pos_encoding = True
-        elif name == 'MTL':
-            cfg.MTL.linear = False
-        elif name == 'MTL-Li':
-            cfg.MTL.linear = True
+        cfg.pos_encoding = True
+        cfg.depth = 1
+        cfg.train_batch_size = 32
+        if name == 'MTN':
+            cfg.linear = False
+        elif name == 'MTN-Li':
+            cfg.linear = True
         model = build_model(cfg).to(device)
-        image = torch.randn(1, 1, 28, 28).to(device)
+        image = torch.randn(cfg.train_batch_size, 1, 28, 28).to(device)
         try:
             model.eval()
             output = model(image)
-            memory = (torch.cuda.memory_allocated(device) + torch.cuda.memory_reserved(device)) / 1024 ** 2
-            flops, params = profile(model.cpu(), inputs=(image.cpu(),))
+            memory = (torch.cuda.memory_allocated(device) + torch.cuda.memory_reserved(device)) / 1024 ** 3
+            flops, params = profile(model.cpu(), inputs=(image.cpu(),), verbose=False)
             del model, image, output
             torch.cuda.empty_cache()
 
-            flops /= 0.5 * 1024 ** 2
+            flops /= 0.5 * 1024 ** 3
             params /= 1024 ** 1
             memory = round(memory, 1)
             flops = round(flops, 1)
@@ -50,7 +45,7 @@ if __name__ == "__main__":
             memory_list.append(memory)
             flops_list.append(flops)
             params_list.append(params)
-        except:
+        except RuntimeError:
             print(name)
             memory_list.append(None)
             flops_list.append(None)

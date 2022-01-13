@@ -13,6 +13,7 @@ model_name: ''
 config_file: ''
 
 # Train configurations
+train_dataset_ratio: 1.0
 num_workers: 4
 optim: 'Adam'  # ['SGD', 'Adam', 'AdamW']
 scheduler: 'StepLR'  # ['StepLR', 'Cosine']
@@ -22,11 +23,11 @@ num_epochs: 20
 step_size: 15
 train_batch_size: 64
 test_batch_size: 64
-print_freq: 50
+print_freq: 10
 save_freq: 1
 
 # Network configurations
-CNN:
-  num_classes: 10
-  conv_dims: [6, 16]
-  fc_dims: [256, 120, 84]
+num_classes: 10
+embed_dim: 64
+depth: 1
+pos_encoding: False

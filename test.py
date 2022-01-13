@@ -12,7 +12,7 @@ def test(model, loader, cfg, device):
     model.eval()
 
     tp = 0
-    for images, labels in tqdm.tqdm(loader, desc='test: '):
+    for images, labels in tqdm.tqdm(loader, desc=f'{cfg.arch} test: '):
         images, labels = images.to(device), labels.to(device)
 
         outputs = model(images)
@@ -23,10 +23,7 @@ def test(model, loader, cfg, device):
     print(f'accuracy: {accuracy:.3f}')
 
 
-if __name__ == '__main__':
-    # Parameter
-    cfg = parse()
-
+def run(cfg):
     # Use GPU or CPU
     use_gpu = cfg.gpu >= 0 and torch.cuda.is_available()
     device = torch.device(f'cuda:{cfg.gpu}' if use_gpu else 'cpu')
@@ -45,3 +42,13 @@ if __name__ == '__main__':
 
     # Test network
     test(model, loader, cfg, device)
+
+
+if __name__ == '__main__':
+    # Parameter
+    cfg = parse()
+
+    # Run
+    run(cfg)
+
+

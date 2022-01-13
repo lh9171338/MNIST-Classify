@@ -1,6 +1,9 @@
 import math
+import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from timm.models.layers import DropPath, trunc_normal_
+from network.resnet import ResNetBottleneck
 
 
 class DWConv(nn.Module):
@@ -56,10 +59,10 @@ class SRA(nn.Module):
     """ Spatial-Reduction Attention
 
     """
-    def __init__(self, dim, num_heads=8, qkv_bias=False, attn_drop=0., proj_drop=0., sr_ratio=1, linear=False):
+    def __init__(self, dim, num_heads=8, qkv_bias=False, sr_ratio=1, attn_drop=0., proj_drop=0., norm=None, linear=False):
         super().__init__()
         assert dim % num_heads == 0, f"dim {dim} should be divided by num_heads {num_heads}."
-
+        norm = norm or nn.Identity
         self.dim = dim
         self.num_heads = num_heads
         head_dim = dim // num_heads
@@ -77,11 +80,11 @@ class SRA(nn.Module):
         if not linear:
             if sr_ratio > 1:
                 self.sr = nn.Conv2d(dim, dim, sr_ratio, stride=sr_ratio)
-                self.norm = nn.LayerNorm(dim)
+                self.norm = norm(dim)
         else:
             self.pool = nn.AdaptiveAvgPool2d(7)
-            self.sr = nn.Conv2d(dim, dim, 1, stride=1)
-            self.norm = nn.LayerNorm(dim)
+            self.sr = nn.Conv2d(dim, dim, 1)
+            self.norm = norm(dim)
             self.act = nn.GELU()
         self.apply(self._init_weights)
 
@@ -129,14 +132,15 @@ class MTL(nn.Module):
     """ Mix Transformer Layer
 
     """
-    def __init__(self, dim, num_heads, mlp_ratio=4, qkv_bias=True, drop=0., attn_drop=0., drop_path=0.1, sr_ratio=1,
-                 linear=False):
+    def __init__(self, dim, num_heads=8, mlp_ratio=4, qkv_bias=False, drop=0., attn_drop=0., drop_path=0.1, sr_ratio=1,
+                 norm=None, linear=False):
         super().__init__()
-        self.norm1 = nn.LayerNorm(dim)
-        self.norm2 = nn.LayerNorm(dim)
+        norm = norm or nn.Identity
+        self.norm1 = norm(dim)
+        self.norm2 = norm(dim)
         self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
         self.attn = SRA(dim, num_heads=num_heads, qkv_bias=qkv_bias, attn_drop=attn_drop, proj_drop=drop,
-                        sr_ratio=sr_ratio, linear=linear)
+                        sr_ratio=sr_ratio, norm=norm, linear=linear)
         self.mlp = MLP(dim, mlp_ratio=mlp_ratio, drop=drop)
 
         self.apply(self._init_weights)
@@ -163,42 +167,68 @@ class MTL(nn.Module):
         return x
 
 
-class MTLNet(nn.Module):
-    def __init__(self, in_dim, num_classes, depth, embed_dim, num_heads, mlp_ratio, sr_ratio, qkv_bias, linear):
+class MTB(nn.Module):
+    """ Mix Transformer Block
+
+    """
+    def __init__(self, dim, depth, num_heads=8, mlp_ratio=4, sr_ratio=1, qkv_bias=False, drop=0., attn_drop=0., drop_path=0., norm=None, linear=False):
         super().__init__()
+        norm = norm or nn.Identity
+        self.norm1 = norm(dim)
+        self.norm2 = norm(dim)
 
         layers = []
+        drop_path = [x.item() for x in torch.linspace(0, drop_path, depth)]
         for i in range(depth):
             layers.append(
                 MTL(
-                    dim=embed_dim,
+                    dim=dim,
                     num_heads=num_heads,
                     mlp_ratio=mlp_ratio,
                     sr_ratio=sr_ratio,
                     qkv_bias=qkv_bias,
+                    drop=drop,
+                    attn_drop=attn_drop,
+                    drop_path=drop_path[i],
+                    norm=norm,
                     linear=linear
                 )
             )
-
-        self.patch_embed = nn.Conv2d(in_dim, embed_dim, 3, stride=2, padding=1)
         self.layers = nn.ModuleList(layers)
-        self.head = nn.Linear(embed_dim, num_classes)
-
-        self.norm1 = nn.LayerNorm(embed_dim)
-        self.norm2 = nn.LayerNorm(embed_dim)
-        self.softmax = nn.Softmax(dim=-1)
 
     def forward(self, x):
-        x = self.patch_embed(x)
         B, C, H, W = x.shape
+
         x = x.flatten(2).transpose(1, 2)
         x = self.norm1(x)
 
         for layer in self.layers:
             x = layer(x, H, W)
+
         x = self.norm2(x)
         x = x.transpose(1, 2).view(B, C, H, W)
 
+        return x
+
+
+class MTNet(nn.Module):
+    """ Mix Transformer Network
+
+    """
+    def __init__(self, num_classes, embed_dim, depth, num_heads=8, mlp_ratio=4, sr_ratio=1, qkv_bias=False, drop_path=0.1, linear=False):
+        super().__init__()
+
+        self.patch_embed = ResNetBottleneck(1, embed_dim // 2)
+        self.layer = MTB(dim=embed_dim, depth=depth, num_heads=num_heads, mlp_ratio=mlp_ratio, sr_ratio=sr_ratio,
+                         qkv_bias=qkv_bias, drop_path=drop_path, norm=nn.LayerNorm, linear=linear)
+
+        self.head = nn.Linear(embed_dim, num_classes)
+        self.softmax = nn.Softmax(dim=-1)
+
+    def forward(self, x):
+        x = F.interpolate(x, scale_factor=2)
+        x = self.patch_embed(x)
+        x = self.layer(x)
         x = x.mean(-1).mean(-1)
         x = self.head(x)
         x = self.softmax(x)

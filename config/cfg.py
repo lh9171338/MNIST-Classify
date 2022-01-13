@@ -8,9 +8,12 @@ def parse():
 
     parser.add_argument('-g', '--gpu', type=int, help='gpu id')
     parser.add_argument('-s', '--seed', type=int, help='seed')
-    arch: ''
+    parser.add_argument('-p', '--pos_encoding', action='store_true', help='positional encoding')
     parser.add_argument('-a', '--arch', type=str, help='model name')
+    parser.add_argument('-r', '--train_dataset_ratio', type=float, help='train dataset ratio')
+    parser.add_argument('-d', '--depth', type=int, help='depth')
     parser.add_argument('-m', '--model_name', type=str, help='model name')
+    parser.add_argument('--print_freq', type=int, default=50, help='print frequency')
     parser.add_argument('--train_batch_size', type=int, help='train batch size')
     parser.add_argument('--test_batch_size', type=int, help='test batch size')
     parser.add_argument('--config_path', type=str, default='config', help='config path')
@@ -19,8 +22,6 @@ def parse():
     opts = parser.parse_args()
     if opts.config_file is None:
         opts.config_file = f'{opts.arch}.yaml'
-    if opts.model_name is None:
-        opts.model_name = opts.arch
 
     opts_dict = vars(opts)
     opts_list = []
@@ -32,13 +33,13 @@ def parse():
     yaml_file = os.path.join(opts.config_path, opts.config_file)
     cfg = CfgNode.load_cfg(open(yaml_file))
     cfg.merge_from_list(opts_list)
+    if cfg.model_name == '':
+        cfg.model_name = f'{cfg.train_dataset_ratio}-{cfg.arch}-{cfg.depth}'
     cfg.download = not os.path.exists(os.path.join(cfg.dataset_path, cfg.dataset_name))
     cfg.log_path = f'{cfg.log_path}/{cfg.model_name}'
     cfg.freeze()
-    cfg.is_frozen()
 
     # Print cfg
-    for k, v in cfg.items():
-        print(f'{k}: {v}')
+    # print(cfg)
 
     return cfg

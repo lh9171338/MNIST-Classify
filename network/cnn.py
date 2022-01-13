@@ -1,42 +1,26 @@
-from torch import nn
+import torch.nn as nn
+import torch.nn.functional as F
+from network.resnet import ResNetBottleneck
 
 
 class CNN(nn.Module):
-    def __init__(self, num_classes, conv_dims, fc_dims):
+    def __init__(self, num_classes, embed_dim, depth):
         super().__init__()
-        assert len(conv_dims) > 0, 'conv_dims can not be empty'
-        assert len(fc_dims) > 0, 'fc_dims can not be empty'
 
-        convs, fcs = [], []
-        for i in range(len(conv_dims)):
-            in_dims = 1 if i == 0 else conv_dims[i - 1]
-            convs.append(
-                nn.Sequential(
-                    nn.Conv2d(in_dims, conv_dims[i], 5),
-                    nn.BatchNorm2d(conv_dims[i]),
-                    nn.ReLU(inplace=True),
-                    nn.MaxPool2d(2, stride=2)
-                )
-            )
+        self.patch_embed = ResNetBottleneck(1, embed_dim // 2)
 
-        for i in range(len(fc_dims) - 1):
-            fcs.append(
-                nn.Sequential(
-                    nn.Linear(fc_dims[i], fc_dims[i + 1]),
-                    nn.BatchNorm1d(fc_dims[i + 1]),
-                    nn.ReLU(inplace=True)
-                )
-            )
-        fcs.append(nn.Linear(fc_dims[-1], num_classes))
+        layers = [ResNetBottleneck(embed_dim) for _ in range(depth)]
+        self.layer = nn.Sequential(*layers)
 
-        self.conv = nn.Sequential(*convs)
-        self.fc = nn.Sequential(*fcs)
+        self.head = nn.Linear(embed_dim, num_classes)
         self.softmax = nn.Softmax(dim=-1)
 
     def forward(self, x):
-        x = self.conv(x)
-        x = x.view(x.shape[0], -1)
-        x = self.fc(x)
+        x = F.interpolate(x, scale_factor=2)
+        x = self.patch_embed(x)
+        x = self.layer(x)
+        x = x.mean(-1).mean(-1)
+        x = self.head(x)
         x = self.softmax(x)
 
         return x

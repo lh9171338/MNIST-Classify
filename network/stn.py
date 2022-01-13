@@ -1,6 +1,8 @@
 import torch.random
-from torch import nn
+import torch.nn as nn
+import torch.nn.functional as F
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
+from network.resnet import ResNetBottleneck
 
 
 class MLP(nn.Module):
@@ -117,13 +119,14 @@ class WMSA(nn.Module):
         return x
 
 
-class STB(nn.Module):
-    """ Swin Transformer Block
+class STL(nn.Module):
+    """ Swin Transformer Layer
 
     """
     def __init__(self, dim, input_size, num_heads, window_size=8, shift_size=0,
-                 mlp_ratio=4, qkv_bias=True, drop=0., attn_drop=0., drop_path=0.):
+                 mlp_ratio=4, qkv_bias=True, drop=0., attn_drop=0., drop_path=0., norm=None):
         super().__init__()
+        norm = norm or nn.Identity
         self.dim = dim
         self.input_size = input_size
         self.num_heads = num_heads
@@ -136,8 +139,8 @@ class STB(nn.Module):
             self.window_size = min(self.input_size)
         assert 0 <= self.shift_size < self.window_size, "shift_size must in [0, window_size)"
 
-        self.norm1 = nn.LayerNorm(dim)
-        self.norm2 = nn.LayerNorm(dim)
+        self.norm1 = norm(dim)
+        self.norm2 = norm(dim)
         self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
         self.attn = WMSA(dim, window_size=to_2tuple(window_size), num_heads=num_heads, qkv_bias=qkv_bias,
                          attn_drop=attn_drop, proj_drop=drop)
@@ -174,6 +177,7 @@ class STB(nn.Module):
         assert N == H * W, "input feature has wrong size"
 
         shortcut = x
+        x = self.norm1(x)
         x = x.view(B, H, W, C)
 
         # cyclic shift
@@ -196,30 +200,31 @@ class STB(nn.Module):
             x = torch.roll(x, shifts=(self.shift_size, self.shift_size), dims=(1, 2))
 
         x = x.view(B, H * W, C)
-        x = shortcut + self.norm1(self.drop_path(x))
+        x = shortcut + self.drop_path(x)
 
         # FFN
-        x = x + self.norm2(self.drop_path(self.mlp(x)))
+        x = x + self.drop_path(self.mlp(self.norm2(x)))
 
         return x
 
 
-class STL(nn.Module):
-    """ Swin Transformer Layer
+class STB(nn.Module):
+    """ Swin Transformer Block
 
     """
     def __init__(self, dim, input_size, num_heads, depth=2, window_size=8, mlp_ratio=4, qkv_bias=True,
-                 drop=0., attn_drop=0., drop_path=0.1,):
+                 drop=0., attn_drop=0., drop_path=0.1, norm=None):
         super().__init__()
-        self.norm1 = nn.LayerNorm(dim)
-        self.norm2 = nn.LayerNorm(dim)
+        norm = norm or nn.Identity
+        self.norm1 = norm(dim)
+        self.norm2 = norm(dim)
 
         # build blocks
         drop_path = [x.item() for x in torch.linspace(0, drop_path, depth)]
         self.blocks = nn.ModuleList([
-            STB(dim=dim, input_size=input_size, num_heads=num_heads, window_size=window_size,
+            STL(dim=dim, input_size=input_size, num_heads=num_heads, window_size=window_size,
                 shift_size=0 if (i % 2 == 0) else window_size // 2, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias,
-                drop=drop, attn_drop=attn_drop, drop_path=drop_path[i])
+                drop=drop, attn_drop=attn_drop, drop_path=drop_path[i], norm=norm)
             for i in range(depth)])
 
     def forward(self, x):
@@ -236,25 +241,22 @@ class STL(nn.Module):
         return x
 
 
-class STLNet(nn.Module):
-    def __init__(self, in_dim, num_classes, input_size, depth, window_size, embed_dim, num_heads, mlp_ratio, qkv_bias):
-        super().__init__()
-        self.patch_embed = nn.Conv2d(in_dim, embed_dim, 3, stride=2, padding=1)
+class STNet(nn.Module):
+    """ Swin Transformer Network
 
-        self.layer = STL(
-            dim=embed_dim,
-            input_size=input_size,
-            num_heads=num_heads,
-            depth=depth,
-            window_size=window_size,
-            mlp_ratio=mlp_ratio,
-            qkv_bias=qkv_bias
-        )
+    """
+    def __init__(self, num_classes, embed_dim, depth, num_heads=8, mlp_ratio=4, qkv_bias=False, drop_path=0.1, window_size=7):
+        super().__init__()
+
+        self.patch_embed = ResNetBottleneck(1, embed_dim // 2)
+        self.layer = STB(dim=embed_dim, depth=depth, num_heads=num_heads, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias,
+                         drop_path=drop_path, norm=nn.LayerNorm, window_size=window_size, input_size=(56, 56))
 
         self.head = nn.Linear(embed_dim, num_classes)
         self.softmax = nn.Softmax(dim=-1)
 
     def forward(self, x):
+        x = F.interpolate(x, scale_factor=2)
         x = self.patch_embed(x)
         x = self.layer(x)
         x = x.mean(-1).mean(-1)

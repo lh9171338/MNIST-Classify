@@ -3,6 +3,7 @@ import tqdm
 import random
 import copy
 import shutil
+import time
 import torch
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
@@ -26,11 +27,15 @@ def train(model, loader, cfg, device):
     step = 1
     best_accuracy = 0.0
     best_state_dict = None
+    num_train_dataset = int(len(loader['train']) * cfg.train_dataset_ratio)
     for epoch in range(1, cfg.num_epochs + 1):
         # Train
         model.train()
 
-        for images, labels in tqdm.tqdm(loader['train'], desc='train: '):
+        for i, (images, labels) in enumerate(tqdm.tqdm(loader['train'], total=num_train_dataset, desc=f'{cfg.arch} train: ')):
+            if i >= num_train_dataset:
+                break
+
             step_ = step * cfg.train_batch_size
             images, labels = images.to(device), labels.to(device)
 
@@ -52,7 +57,7 @@ def train(model, loader, cfg, device):
         tp = 0
 
         model.eval()
-        for images, labels in tqdm.tqdm(loader['val'], desc='val: '):
+        for images, labels in tqdm.tqdm(loader['val'], desc=f'{cfg.arch} val: '):
             images, labels = images.to(device), labels.to(device)
 
             outputs = model(images)
@@ -76,9 +81,7 @@ def train(model, loader, cfg, device):
     torch.save(best_state_dict, model_filename)
 
 
-if __name__ == '__main__':
-    # Parameter
-    cfg = parse()
+def run(cfg):
     os.makedirs(cfg.model_path, exist_ok=True)
 
     # Use GPU or CPU
@@ -107,3 +110,12 @@ if __name__ == '__main__':
 
     # Train network
     train(model, loader, cfg, device)
+
+
+if __name__ == '__main__':
+    # Parameter
+    cfg = parse()
+    print(cfg)
+
+    # Run
+    run(cfg)
