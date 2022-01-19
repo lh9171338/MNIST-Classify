@@ -56,13 +56,13 @@ class MHSA(nn.Module):
             x = self.norm(self.sr(x))
         k = self.key(x).view(B, self.num_heads, C // self.num_heads, -1)
         v = self.value(x).view(B, self.num_heads, C // self.num_heads, -1)
-
-        attn = q.transpose(-2, -1) @ k
         if self.pos_encoding:
             pos = (self.rel_h + self.rel_w).view(1, self.num_heads, C // self.num_heads, -1)
-            pos = q.transpose(-2, -1) @ pos
-            attn = attn + pos
-        attn = self.attn_drop(self.softmax(attn * self.scale))
+            k = k + pos
+        k = k * self.scale
+
+        attn = q.transpose(-2, -1) @ k
+        attn = self.attn_drop(self.softmax(attn))
         out = (v @ attn.transpose(-2, -1)).view(B, C, H, W)
         out = self.proj_drop(self.proj(out))
 

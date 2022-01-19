@@ -42,8 +42,8 @@ class ASA(nn.Module):
             self.rel_w = nn.Parameter(torch.randn([1, num_heads, self.head_dim, width // sr_ratio]))
 
     def forward(self, x):
-        x = torch.cat([x, x.transpose(-2, -1)], dim=1)
         B, C, H, W = x.shape
+        x = torch.cat([x, x.transpose(-2, -1)], dim=1)
 
         x = self.avg(x)
         q = self.query(x).view(B, self.num_heads, self.head_dim, -1)
@@ -51,15 +51,15 @@ class ASA(nn.Module):
             x = self.norm(self.sr(x))
         k = self.key(x).view(B, self.num_heads, self.head_dim, -1)
         v = self.value(x).view(B, self.num_heads, self.head_dim, -1)
+        if self.pos_encoding:
+            k = k + self.rel_w
+        k = k * self.scale
 
         attn = q.transpose(-2, -1) @ k
-        if self.pos_encoding:
-            pos = q.transpose(-2, -1) @ self.rel_w
-            attn = attn + pos
-        attn = self.attn_drop(self.softmax(attn * self.scale))
-        out = (v @ attn.transpose(-2, -1)).reshape(B, C, H).unsqueeze(dim=2)
+        attn = self.attn_drop(self.softmax(attn))
+        out = (v @ attn.transpose(-2, -1)).reshape(B, 2 * C, W).unsqueeze(dim=2)
         out = self.proj_drop(self.proj(out))
-        out = out[:, :C // 2] + out[:, C // 2:].transpose(-2, -1)
+        out = out[:, :C] + out[:, C:].transpose(-2, -1)
 
         return out
 

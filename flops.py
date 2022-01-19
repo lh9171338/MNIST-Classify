@@ -45,8 +45,8 @@ if __name__ == "__main__":
             memory_list.append(memory)
             flops_list.append(flops)
             params_list.append(params)
-        except RuntimeError:
-            print(name)
+        except RuntimeError as e:
+            print(name, e)
             memory_list.append(None)
             flops_list.append(None)
             params_list.append(None)
