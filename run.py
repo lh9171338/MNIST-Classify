@@ -36,11 +36,11 @@ if __name__ == "__main__":
             while True:
                 try:
                     run(cfg)
-                except:
-                    print(f'Error: batch size: {cfg.train_batch_size}')
+                except Exception as e:
+                    print(f'Error: {e} batch size: {cfg.train_batch_size}')
                     cfg.train_batch_size //= 2
                     cfg.test_batch_size //= 2
                     if cfg.train_batch_size < 1:
-                        exit(-1)
+                        break
                 else:
                     break
