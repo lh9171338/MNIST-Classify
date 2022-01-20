@@ -8,7 +8,6 @@ def parse():
 
     parser.add_argument('-g', '--gpu', type=int, help='gpu id')
     parser.add_argument('-s', '--seed', type=int, help='seed')
-    arch: ''
     parser.add_argument('-a', '--arch', type=str, help='model name')
     parser.add_argument('-m', '--model_name', type=str, help='model name')
     parser.add_argument('--train_batch_size', type=int, help='train batch size')
