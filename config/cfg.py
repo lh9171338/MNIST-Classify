@@ -36,7 +36,7 @@ def parse():
     cfg.freeze()
 
     # Print cfg
-    # for k, v in cfg.items():
-    #     print(f'{k}: {v}')
+    for k, v in cfg.items():
+        print(f'{k}: {v}')
 
     return cfg

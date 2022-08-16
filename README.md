@@ -26,10 +26,9 @@ The repository contains the PyTorch implementation of image classification model
 
 # Requirements
 
- - python3
- - pytorch==1.6.0
- - CUDA==10.1
- - argparse, yacs, tqdm, tensorboardX
+```shell
+pip install -r ./requirements.txt
+```
 
 # Training & Testing
 
@@ -40,5 +39,9 @@ python train.py --arch <ARCH> [--model_name <MODEL_NAME>] [--gpu <GPU_ID>]
 
 ## Test
 ```shell
+# Test one model
 python test.py --arch <ARCH> [--model_name <MODEL_NAME>] [--gpu <GPU_ID>]
+
+# Test all models
+./run.sh
 ```

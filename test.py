@@ -39,7 +39,7 @@ if __name__ == '__main__':
     model.load_state_dict(state_dict)
 
     # Load dataset
-    dataset = datasets.MNIST(root=cfg.dataset_path, train=False, transform=transforms.ToTensor())
+    dataset = datasets.MNIST(root=cfg.dataset_path, train=False, transform=transforms.ToTensor(), download=cfg.download)
     loader = torch.utils.data.DataLoader(dataset=dataset, batch_size=cfg.test_batch_size,
                                                num_workers=cfg.num_workers, shuffle=False)
 
